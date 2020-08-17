@@ -65,7 +65,7 @@ public class ChromeSafariBrowserManager: NSObject, FlutterPlugin {
         
         if #available(iOS 9.0, *) {
             
-            if let flutterViewController = UIApplication.shared.delegate?.window.unsafelyUnwrapped?.rootViewController as? FlutterViewController {
+            if let topController = self.topController {
                 let safariOptions = SafariBrowserOptions()
                 let _ = safariOptions.parse(options: options)
                 
@@ -89,7 +89,7 @@ public class ChromeSafariBrowserManager: NSObject, FlutterPlugin {
                 safari.safariOptions = safariOptions
                 safari.prepareSafariBrowser()
                 
-                flutterViewController.present(safari, animated: true) {
+                topController.present(safari, animated: true) {
                     result(true)
                 }
             }
@@ -104,5 +104,21 @@ public class ChromeSafariBrowserManager: NSObject, FlutterPlugin {
             }
             SwiftFlutterPlugin.instance!.inAppBrowserManager!.openUrl(uuid: uuidFallback!, url: url, options: optionsFallback ?? [:], headers: headersFallback ?? [:], contextMenu: contextMenuFallback ?? [:], windowId: windowIdFallback)
         }
+    }
+
+    private var topController: UIViewController? {
+        guard var controller = UIApplication.shared.delegate?.window.unsafelyUnwrapped?.rootViewController else {
+            return nil
+        }
+
+        while let presented = controller.presentedViewController {
+            controller = presented
+        }
+
+        if let topNavigationController = controller as? UINavigationController {
+            return topNavigationController.viewControllers.last ?? topNavigationController
+        }
+
+        return controller
     }
 }
